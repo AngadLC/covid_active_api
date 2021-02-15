@@ -1,10 +1,22 @@
-// chart.js
+// all global variables
 var countrypiechartvar;
 const xlabels = []
 const ylables = []
 const reco = []
 const deaths1 = []
 const active1 = []
+// getting all the data from api and storing 
+let alldata = []
+
+// leaflet map
+var mymap = L.map('mapid').setView([28.314053058069618, 84.82818603515625], 7);
+var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(mymap);
+
+
+// chart.js
 // getting pie chart
 getpie()
 // getting line chart
@@ -39,13 +51,7 @@ async function getchart() {
         }
     });
 }
-// leaflet map
-var mymap = L.map('mapid').setView([28.314053058069618, 84.82818603515625], 7);
-var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(mymap);
-let alldata = []
+
 
 async function getdata() {
     await fetch('https://corona.lmao.ninja/v2/countries?fbclid=IwAR1SM_J_74xVI38XBvMxCnN4HoWsM_ub-sMXPcZ1fjwiq-cUT1PPGaDi3Ao')
@@ -58,80 +64,60 @@ async function getdata() {
                 var lng = parseFloat(element.countryInfo.long)
                 // console.log(lat)
                 var marker = L.marker([lat, lng], {
-                    title: element.country + '  Active cases' + element.active
+                    title: `${element.country} Active cases ${element.active}`
                 }).on('click', displaydata).addTo(mymap);
                 alldata.push(element)
                 const { country, active } = element
                 xlabels.push(country)
                 ylables.push(active)
-                // console.log(country, active)
-                // calling marker onclick even 
-
-                function displaydata(e) {
-                    console.log(e)
-                    console.log('hi')
-                    fetch('https://corona.lmao.ninja/v2/countries?fbclid=IwAR1SM_J_74xVI38XBvMxCnN4HoWsM_ub-sMXPcZ1fjwiq-cUT1PPGaDi3Ao')
-                        .then(res => res.json())
-                        .then(data => {
-                            data.forEach(element => {
-
-                                //  console.log(element)
-                                if (element.countryInfo.lat == e.target._latlng.lat && element.countryInfo.long == e.target._latlng.lng) {
-                                    // element.preventDefault()
-                                    console.log(element)
-                                    
-                                    let activepeople = element.active
-                                    let continent = element.continent
-                                    let country = element.country
-                                    let country_flag = element.countryInfo.flag
-                                    let deathpeople = element.deaths
-                                    let recoverpeople = element.recovered
-                                    let today_active = element.todayCases
-                                    let today_death = element.todayDeaths
-                                    const loadingdata = document.getElementById('popupcontent')
-                                        .innerHTML = `Continent : ${continent}
-                                         country: ${country},
-                                         active People = ${activepeople} 
-                                         Total death = ${deathpeople}
-                                         Today  new cases = ${today_active}
-                                         TOday Death = ${today_death}
-                                 `
-                                    const loadingh1 = document.getElementById('countryinfo')
-                                        .innerHTML = ` ${country}`
-                                    // For a pie chart
-                                    const countrypiechart = document.getElementById('cpie').getContext('2d');
-
-                                    //  countrypiechart. clearRect(0, 0, '20vw','30Vw');
-                                    // countrypiechart = $('cpie').replaceWith($('<canvas id="canvas"  style="position: relative; height:30vh; width:20vw"></canvas>'));
-                                    if(countrypiechartvar !=undefined){
-                                        removeData(countrypiechartvar)
-                                    } 
-                                    countrypiechartvar = new Chart(countrypiechart, {
-                                        type: 'pie',
-                                        data: {
-                                            datasets: [{
-                                                data: [activepeople, deathpeople, recoverpeople],
-                                                backgroundColor: ['rgba(186, 175, 26)', 'rgba(240, 46, 55)', 'rgba(120, 179, 86)']
-                                            }],
-                                            labels: [
-                                                'Active',
-                                                'Deaths',
-                                                'Recover'
-                                            ]
-                                        }
-
-                                    })
-                                    
-                                    
-
-                                }
-                            })
-                        })
-                }
             });
-
-
         })
+}
+// getting data of the marker
+function displaydata(e) {
+    // console.log(e)
+    // console.log('hi')
+    alldata.forEach(element => {
+        //  console.log(element)
+        if (element.countryInfo.lat == e.target._latlng.lat && element.countryInfo.long == e.target._latlng.lng) {
+            // element.preventDefault()
+            console.log(element)
+            let {active, continent, country, deaths, recovered, todayCases, todayDeaths} = element
+            const loadingdata = document.getElementById('popupcontent')
+                .innerHTML = `Continent : ${continent}
+                         country: ${country},
+                         active People = ${active} 
+                         Total death = ${deaths}
+                         Today  new cases = ${todayCases}
+                         Today Death = ${todayDeaths}
+                 `
+            const loadingh1 = document.getElementById('countryinfo')
+                .innerHTML = ` ${country}`
+            // For a pie chart
+            const countrypiechart = document.getElementById('cpie').getContext('2d');
+            if (countrypiechartvar != undefined) {
+                removeData(countrypiechartvar)
+            }
+            countrypiechartvar = new Chart(countrypiechart, {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: [active, deaths, recovered],
+                        backgroundColor: ['rgba(186, 175, 26)', 'rgba(240, 46, 55)', 'rgba(120, 179, 86)']
+                    }],
+                    labels: [
+                        'Active',
+                        'Deaths',
+                        'Recover'
+                    ]
+                }
+
+            })
+
+
+
+        }
+    })
 }
 function removeData(chart) {
     chart.data.labels.pop();
